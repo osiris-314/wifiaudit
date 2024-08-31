@@ -283,15 +283,15 @@ def _get_encryption_type(packet):
 def print_and_log_network_data():
     """Function to print all network data in a formatted way and log it to a file."""
     os.system('clear')
-    
-    # Sorting networks by SSID
+
+    # Sort networks by SSID for consistent order
     sorted_networks = dict(sorted(networks.items(), key=lambda item: item[1].get('SSID', '')))
 
     # Print to terminal with colors
-    print_table(sorted_networks, ['BSSID', 'SSID', 'Signal', 'Channel', 'Frequency', 'Encryption', 'Beacons', 'Data', '#/s', 'Vendor'], format_network_row)
-    print_table(devices_with_ap, ['MAC', 'Signal', 'Associated AP', 'Vendor'], format_associated_device_row)
-    print_table(devices_without_ap, ['MAC', 'Signal', 'Probe SSIDs', 'Vendor'], format_non_associated_device_row)
-    print_table(other_devices, ['MAC', 'Signal', 'Vendor'], format_other_device_row)
+    print_table(sorted_networks, ['BSSID', 'SSID', 'Signal', 'Channel', 'Frequency', 'Encryption', 'Beacons', 'Data', '#/s', 'Vendor'], format_network_row, color=True)
+    print_table(devices_with_ap, ['MAC', 'Signal', 'Associated AP', 'Vendor'], format_associated_device_row, color=True)
+    print_table(devices_without_ap, ['MAC', 'Signal', 'Probe SSIDs', 'Vendor'], format_non_associated_device_row, color=True)
+    print_table(other_devices, ['MAC', 'Signal', 'Vendor'], format_other_device_row, color=True)
 
     # Write to file without colors
     with open(data_file_path, 'w') as f:
@@ -301,9 +301,13 @@ def print_and_log_network_data():
         print_table(other_devices, ['MAC', 'Signal', 'Vendor'], format_other_device_row, file=f, color=False)
 
 
+
+
 def format_network_row(bssid, info, color=True):
+    """Format rows for network data, ensuring color codes are only included when color is True."""
     vendor_display = info.get('Vendor', '-')
-    mac_display = f"{bssid}{(' ' + Fore.YELLOW + '*' + Fore.RESET) if info.get('Randomized', False) else ''}"
+    mac_display = f"{bssid}{(' *' if info.get('Randomized', False) else '')}"
+
     ssid_display = info.get('SSID', '')
     if color:
         vendor_color = Fore.LIGHTMAGENTA_EX if vendor_display == 'Unknown' else Fore.WHITE if vendor_display == '-' else Fore.LIGHTMAGENTA_EX
@@ -335,19 +339,22 @@ def format_network_row(bssid, info, color=True):
             '-' if vendor_display == 'Unknown' else vendor_display
         ]
 
+
 def format_associated_device_row(mac, info, color=True):
-    """Format rows for associated devices."""
+    """Format rows for associated devices, ensuring color codes are only included when color is True."""
     vendor_display = info.get('Vendor', '-')
-    mac_display = f"{mac}{(' ' + Fore.YELLOW + '*' + Fore.RESET) if info.get('Randomized', False) else ''}"
+    mac_display = f"{mac}{(' *' if info.get('Randomized', False) else '')}"
+
     associated_ap_display = networks[info['Associated AP']]['SSID'] if info['Associated AP'] in networks else 'N/A'
     if color:
         vendor_color = Fore.LIGHTMAGENTA_EX if vendor_display == 'Unknown' else Fore.WHITE if vendor_display == '-' else Fore.LIGHTMAGENTA_EX
-        mac_color = Fore.LIGHTBLUE_EX  # Base color for the MAC address, without the asterisk
+        mac_color = Fore.LIGHTBLUE_EX
+        ap_color = Fore.LIGHTGREEN_EX
         return [
-            mac_color + mac + Fore.RESET + (Fore.YELLOW + ' *' + Fore.RESET if info.get('Randomized', False) else ''),
+            mac_color + mac_display + Fore.RESET,
             Fore.WHITE + ' ' + str(info.get('Signal', 'N/A')) + Fore.RESET,
-            Fore.LIGHTGREEN_EX + associated_ap_display + Fore.RESET,
-            vendor_color + ('-' if vendor_display == 'Unknown' else vendor_display) + Fore.RESET
+            ap_color + associated_ap_display + Fore.RESET,
+            vendor_color + vendor_display + Fore.RESET
         ]
     else:
         return [
@@ -357,20 +364,22 @@ def format_associated_device_row(mac, info, color=True):
             '-' if vendor_display == 'Unknown' else vendor_display
         ]
 
+
 def format_non_associated_device_row(mac, info, color=True):
-    """Format rows for non-associated devices."""
-    probe_color = Fore.RED if 'N/A' in info['Probe SSID'] else Fore.YELLOW
+    """Format rows for non-associated devices, ensuring color codes are only included when color is True."""
     vendor_display = info.get('Vendor', '-')
-    mac_display = f"{mac}{(' ' + Fore.YELLOW + '*' + Fore.RESET) if info.get('Randomized', False) else ''}"
+    mac_display = f"{mac}{(' *' if info.get('Randomized', False) else '')}"
     probe_ssids = ', '.join(info['Probe SSID'])
+    
     if color:
         vendor_color = Fore.LIGHTMAGENTA_EX if vendor_display == 'Unknown' else Fore.WHITE if vendor_display == '-' else Fore.LIGHTMAGENTA_EX
-        mac_color = Fore.LIGHTBLUE_EX  # Base color for the MAC address, without the asterisk
+        probe_color = Fore.RED if 'N/A' in info['Probe SSID'] else Fore.YELLOW
+        mac_color = Fore.LIGHTBLUE_EX
         return [
-            mac_color + mac + Fore.RESET + (Fore.YELLOW + ' *' + Fore.RESET if info.get('Randomized', False) else ''),
+            mac_color + mac_display + Fore.RESET,
             Fore.WHITE + ' ' + str(info.get('Signal', 'N/A')) + Fore.RESET,
             probe_color + probe_ssids + Fore.RESET,
-            vendor_color + ('-' if vendor_display == 'Unknown' else vendor_display) + Fore.RESET
+            vendor_color + vendor_display + Fore.RESET
         ]
     else:
         return [
@@ -378,21 +387,21 @@ def format_non_associated_device_row(mac, info, color=True):
             str(info.get('Signal', 'N/A')),
             probe_ssids,
             '-' if vendor_display == 'Unknown' else vendor_display
-
-
         ]
 
+
 def format_other_device_row(mac, info, color=True):
-    """Format rows for other devices."""
+    """Format rows for other devices, ensuring color codes are only included when color is True."""
     vendor_display = info.get('Vendor', '-')
-    mac_display = f"{mac}{(' ' + Fore.YELLOW + '*' + Fore.RESET) if info.get('Randomized', False) else ''}"
+    mac_display = f"{mac}{(' *' if info.get('Randomized', False) else '')}"
+
     if color:
         vendor_color = Fore.LIGHTMAGENTA_EX if vendor_display == 'Unknown' else Fore.WHITE if vendor_display == '-' else Fore.LIGHTMAGENTA_EX
-        mac_color = Fore.LIGHTBLUE_EX  # Base color for the MAC address, without the asterisk
+        mac_color = Fore.LIGHTBLUE_EX
         return [
-            mac_color + mac + Fore.RESET + (Fore.YELLOW + ' *' + Fore.RESET if info.get('Randomized', False) else ''),
+            mac_color + mac_display + Fore.RESET,
             Fore.WHITE + ' ' + str(info.get('Signal', 'N/A')) + Fore.RESET,
-            vendor_color + ('-' if vendor_display == 'Unknown' else vendor_display) + Fore.RESET
+            vendor_color + vendor_display + Fore.RESET
         ]
     else:
         return [
@@ -400,6 +409,7 @@ def format_other_device_row(mac, info, color=True):
             str(info.get('Signal', 'N/A')),
             '-' if vendor_display == 'Unknown' else vendor_display
         ]
+
 
 def get_encryption_color(encryption):
     """Get the color for encryption types."""
@@ -432,7 +442,7 @@ def print_table(data_dict, headers, row_formatter, file=None, color=True):
         print(" | ".join(formatted_cells), file=file)
 
 def strip_color_codes(text):
-    """Strip color codes for proper width calculation."""
+    """Strip ANSI color codes from a string."""
     ansi_escape = re.compile(r'\x1b\[[0-9;]*m')
     return ansi_escape.sub('', text)
 
