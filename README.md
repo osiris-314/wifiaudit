@@ -1,5 +1,6 @@
 # WIFI Auditing
 This Tool is a powerful Python application designed to monitor and analyze Wi-Fi networks. It leverages the capabilities of the Scapy library to capture and analyze 802.11 packets, facilitating insights into network behavior, security posture, and operational performance. This tool is particularly useful for network administrators, security professionals, and enthusiasts interested in wireless technologies.
+- The script also create a file called wifiaudit_data.txt and constantly updates it with the last know data till that point.
 ##
 ```
 python wifiaudit.py <interface_name_here>
