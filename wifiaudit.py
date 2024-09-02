@@ -1,4 +1,5 @@
 import os
+from os import name, system
 import time
 import sys
 from scapy.all import *
@@ -214,8 +215,10 @@ def find_channel_for_mac(interface, target_mac):
 
     while not found_channel:
         for ch in range(1, 15):
+
+
             set_channel(interface, ch)
-            os.system('clear')
+            clear()
             print(f"Scanning for {target_mac} on channel {ch}...")
             sniff(iface=interface, prn=packet_callback, stop_filter=lambda x: found_channel is not None, timeout=0.2, store=0)
 
@@ -282,7 +285,7 @@ def _get_encryption_type(packet):
 
 def print_and_log_network_data():
     """Function to print all network data in a formatted way and log it to a file."""
-    os.system('clear')
+    clear()
 
     # Sort networks by SSID for consistent order
     sorted_networks = dict(sorted(networks.items(), key=lambda item: item[1].get('SSID', '')))
@@ -300,13 +303,10 @@ def print_and_log_network_data():
         print_table(devices_without_ap, ['MAC', 'Signal', 'Probe SSIDs', 'Vendor'], format_non_associated_device_row, file=f, color=False)
         print_table(other_devices, ['MAC', 'Signal', 'Vendor'], format_other_device_row, file=f, color=False)
 
-
-
-
 def format_network_row(bssid, info, color=True):
     """Format rows for network data, ensuring color codes are only included when color is True."""
     vendor_display = info.get('Vendor', '-')
-    mac_display = f"{bssid}{(' *' if info.get('Randomized', False) else '')}"
+    mac_display = f"{bssid}{(Fore.YELLOW + ' *' if info.get('Randomized', False) else '')}"
 
     ssid_display = info.get('SSID', '')
     if color:
@@ -339,11 +339,10 @@ def format_network_row(bssid, info, color=True):
             '-' if vendor_display == 'Unknown' else vendor_display
         ]
 
-
 def format_associated_device_row(mac, info, color=True):
     """Format rows for associated devices, ensuring color codes are only included when color is True."""
     vendor_display = info.get('Vendor', '-')
-    mac_display = f"{mac}{(' *' if info.get('Randomized', False) else '')}"
+    mac_display = f"{mac}{(Fore.YELLOW + ' *' if info.get('Randomized', False) else '')}"
 
     associated_ap_display = networks[info['Associated AP']]['SSID'] if info['Associated AP'] in networks else 'N/A'
     if color:
@@ -364,11 +363,10 @@ def format_associated_device_row(mac, info, color=True):
             '-' if vendor_display == 'Unknown' else vendor_display
         ]
 
-
 def format_non_associated_device_row(mac, info, color=True):
     """Format rows for non-associated devices, ensuring color codes are only included when color is True."""
     vendor_display = info.get('Vendor', '-')
-    mac_display = f"{mac}{(' *' if info.get('Randomized', False) else '')}"
+    mac_display = f"{mac}{(Fore.YELLOW + ' *' if info.get('Randomized', False) else '')}"
     probe_ssids = ', '.join(info['Probe SSID'])
     
     if color:
@@ -389,11 +387,12 @@ def format_non_associated_device_row(mac, info, color=True):
             '-' if vendor_display == 'Unknown' else vendor_display
         ]
 
-
 def format_other_device_row(mac, info, color=True):
     """Format rows for other devices, ensuring color codes are only included when color is True."""
+
+
     vendor_display = info.get('Vendor', '-')
-    mac_display = f"{mac}{(' *' if info.get('Randomized', False) else '')}"
+    mac_display = f"{mac}{(Fore.YELLOW + ' *' if info.get('Randomized', False) else '')}"
 
     if color:
         vendor_color = Fore.LIGHTMAGENTA_EX if vendor_display == 'Unknown' else Fore.WHITE if vendor_display == '-' else Fore.LIGHTMAGENTA_EX
@@ -409,7 +408,6 @@ def format_other_device_row(mac, info, color=True):
             str(info.get('Signal', 'N/A')),
             '-' if vendor_display == 'Unknown' else vendor_display
         ]
-
 
 def get_encryption_color(encryption):
     """Get the color for encryption types."""
@@ -451,12 +449,12 @@ def get_mac_vendor(mac_address):
     try:
         mac_lookup = MacLookup()
         vendor = mac_lookup.lookup(mac_address)
-        return vendor
+        return vendor if vendor else '-'
     except KeyError:
-        return "Unknown"
+        return "-"
     except Exception as e:
         logging.error(f"An error occurred: {e}")
-        return "Unknown"
+        return "-"
 
 def mac_lookup_worker():
     """Thread worker to process MAC lookup requests concurrently."""
@@ -516,6 +514,16 @@ def start_sniffing(interface):
             logging.error(f"An unexpected error occurred: {e}")
             break
 
+def clear():
+
+    # for windows
+    if name == 'nt':
+        _ = system('cls')
+
+    # for mac and linux(here, os.name is 'posix')
+    else:
+        _ = system('clear')
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Wi-Fi Sniffer")
     parser.add_argument("interface", help="The network interface to use, e.g., wlan0")
@@ -530,12 +538,12 @@ if __name__ == "__main__":
     if args.mac:
         if args.channel:
             while True:
-                os.system('clear')
+                clear()
                 print(f"Scanning for {args.mac} on channel {args.channel}...")
                 set_channel(interface, args.channel)
                 sniff(iface=interface, prn=packet_handler, store=0, timeout=0.2)
         else:
-            os.system('clear')
+            clear()
             found_channel = find_channel_for_mac(interface, args.mac)
             if found_channel:
                 set_channel(interface, found_channel)
