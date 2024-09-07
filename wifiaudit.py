@@ -433,7 +433,7 @@ def print_table(data_dict, headers, row_formatter, file=None, color=True):
 
     header_line = " | ".join(f"{header:<{col_widths[i]}}" for i, header in enumerate(headers))
     print((Fore.LIGHTWHITE_EX + header_line + Fore.RESET) if color else header_line, file=file)
-    print((Fore.LIGHTWHITE_EX + "-" * (sum(col_widths) + len(headers) * 3 - 1) + Fore.RESET) if color else "-" * (sum(col_widths) + len(headers) * 3 - 1), file=file)
+    print((Fore.LIGHTWHITE_EX + "-" * (sum(col_widths) + len(headers) * 3 - 3) + Fore.RESET) if color else "-" * (sum(col_widths) + len(headers) * 3 - 1), file=file)
 
     for key, info in data_dict.items():
         row = row_formatter(key, info, color=color)
