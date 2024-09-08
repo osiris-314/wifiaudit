@@ -111,7 +111,7 @@ def process_beacon_frame(packet):
     # Check if the SSID is hidden (empty)
     if ssid == '':
         # Find the Dot11Elt with ID 0 for SSID
-        ssid_element = packet.getlayer(Dot11Elt, ID=0)
+        ssid_element = packet.getlayer(Dot11Elt, ID=0) # type: ignore
         if ssid_element and hasattr(ssid_element, 'len'):
             ssid_length = ssid_element.len  # Use the length field of the Dot11Elt layer
             ssid = f"<length: {ssid_length}>"
@@ -208,7 +208,7 @@ def find_channel_for_mac(interface, target_mac):
 
     def packet_callback(packet):
         nonlocal found_channel
-        if packet.haslayer(Dot11):
+        if packet.haslayer(Dot11): # type: ignore
             if packet.addr2 == target_mac or packet.addr1 == target_mac:
                 elements = packet[Dot11Beacon].network_stats()  # type: ignore
                 found_channel = elements.get("channel", None)
